@@ -26,12 +26,22 @@ router.get("/", function(req, res) {
     res.json({ message: "Shipped CMX Demo Server" })
 })
 
+// Implement server virtualization if requested
+
+var virtualize = nconf.get("virtualize")
+var virtualCMXServer = null
+if (virtualize) {
+  virtualCMXServer = require("./virtualCMXServer")
+  virtualCMXServer.implement()
+}
+
 // Implement CMX pass-through methods
 // Methods are specfied in Express.js syntax
 
 var methods = [
   "/location/v1/clients/count",                      // Count of clients
   "/location/v1/clients",                            // List all clients
+  /^\/location\/v1\/clients\/([0-9a-f:]+)/,          // Single client
   /^\/location\/v1\/history\/clients\/([0-9a-f:]+)/, // Single client history
   /^\/config\/v1\/maps\/imagesource\/(.*)/           // Retrieve image
 ]
@@ -51,13 +61,18 @@ console.log("CMX demo server listening on port " + port)
 function cmxPassThru(router, method) {
   router.get(method, function(req,res) {
     cmd = curl2Cmx + req.path
-    console.log("Pass-thru command: " + req.path)
-    exec(cmd, function(error, stdout, stderr) {
-      if (! error) {
-        res.send(JSON.parse(stdout))
-      } else {
-        res.status(400).json({error: stderr})
-      }
-    })
+    if (virtualize) {
+      virtualCMXServer.respond(req, res)
+    }
+    else {
+      console.log("Pass-thru command: " + req.path)
+      exec(cmd, function(error, stdout, stderr) {
+        if (! error) {
+          res.send(JSON.parse(stdout))
+        } else {
+          res.status(400).json({error: stderr})
+        }
+      })
+    }
   })
 }
