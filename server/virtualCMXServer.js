@@ -22,20 +22,20 @@ function implement() {
 // respond() - respond to a REST API call
 function respond(req, res) {
   var matches
-  if (null != req.path.match(/clients\/count$/)) {
+  if (null != req.path.match(/location\/v1\/clients\/count$/)) {
     res.json({count: allClients.length})
 
-  } else if (null != req.path.match(/clients$/)) {
+  } else if (null != req.path.match(/location\/v1\/clients$/)) {
     res.send(allClients)
 
-  } else if (null != (matches = req.path.match(/history\/clients\/([0-9a-f:]+)/))) {
+  } else if (null != (matches = req.path.match(/location\/v1\/history\/clients\/([0-9a-f:]+)/))) {
     if (history[0].apMacAddress == matches[1]) {
       res.send(history)
     } else {
       res.status(404).send({error: "Client " + matches[1] + " history not available"})
     }
 
-  } else if (null != (matches = req.path.match(/\/clients\/([0-9a-f:]+)/))) {
+  } else if (null != (matches = req.path.match(/location\/v1\/clients\/([0-9a-f:]+)/))) {
     for (var i = 0; i < allClients.length; i++) {
       var client = allClients[i]
       if (client.apMacAddress == matches[1]) {
@@ -49,7 +49,7 @@ function respond(req, res) {
       res.status(404).send({error: "Image " + matches[1] + " not found"})
 
   } else {
-      res.status(500).send({error: "URL " + req.path + " cannot be virtualized"})
+      res.status(500).send({error: "Method " + req.path + " cannot be virtualized"})
   }
 }
 
