@@ -19,7 +19,7 @@ app.use(bodyParser.json())
 
 // Set configuration defaults
 
-var curl2Cms = null
+var curl2Cmx = null
 var virtualize = false
 var virtualCMXServer = null
 configure()
