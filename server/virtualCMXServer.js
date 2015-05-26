@@ -10,6 +10,7 @@ Copyright (C) Cisco, Inc.  All rights reserved.
 
 var allClients = null
 var history = null
+var fs = require("fs")
 
 
 // implement() - set up server virtualization
@@ -32,7 +33,7 @@ function respond(req, res) {
     if (history[0].apMacAddress == matches[1]) {
       res.send(history)
     } else {
-      res.status(404).send({error: "Client " + matches[1] + " history not available"})
+      res.status(404).send({error: "Client " + matches[1] + " history not available; history is available only for " + history[0].apMacAddress})
     }
 
   } else if (null != (matches = req.path.match(/location\/v1\/clients\/([0-9a-f:]+)/))) {
@@ -45,11 +46,16 @@ function respond(req, res) {
     }
     res.status(404).send({error: "Client " + matches[1] + " not found"})
 
-  } else if (null != (matches = req.path.match(/^\/config\/v1\/maps\/imagesource\/(.*)/))) {
-      res.status(404).send({error: "Image " + matches[1] + " not found"})
-
+    fs.readFile("./testData/"+matches[1]+matches[2], function(err, img) {
+      if (err) {
+        res.status(404).send({error: "Image " + matches[1]+matches[2] + " not available from virtualized server"})
+      } else {
+        res.writeHead(200,{"Content-Type":"image/"+matches[2]})
+        res.end(img, "binary")
+      }
+    })
   } else {
-      res.status(500).send({error: "Method " + req.path + " cannot be virtualized"})
+      res.status(500).send({error: "Method " + req.path + " has not been virtualized"})
   }
 }
 
