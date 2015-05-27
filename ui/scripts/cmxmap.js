@@ -60,13 +60,14 @@ function showUserMap(mapNameArg, imageNameArg, userToShow) {
         $map.append(newLink);
     }
     $(".userPoint").remove()
+    $(".userPointCaption").remove()
   }
 }
 
 function getUserHistory(i)
 {
   $(".point").remove()
-  $(".userPoint").remove()
+  $(".userPointCaption").remove()
   $("#content").html(userListButton + "&nbsp;&nbsp" + allUserMapButton)
   $("#content").append("<br><br><span class='mapCaption'>Points are numbered from the most recent; hover over a point to see its exact time</span>")
   var user = global["userlist"][i]
