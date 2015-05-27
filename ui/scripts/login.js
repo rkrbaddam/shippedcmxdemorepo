@@ -8,7 +8,7 @@
 var global = new Object() // Global values
 
 var restApiRoot = "/api"
-var loginHeading = "Welcome to CMX on Shipped"
+var loginHeading = "Welcome to Connected Mobile Experiences on Shipped"
 
 // validate - Validate user's login info
 function validate()
@@ -56,6 +56,8 @@ function doLogin(password) {
        setError()
        global["apiToken"] = data.authToken
        $("#loginForm").hide()
+       $("#logo").hide()
+       $("#heading").html('')
        $("#logoutButton").show()
        getUsers()
      }, "json")
@@ -76,6 +78,7 @@ function showRestError(jqXHR, textStatus, errorThrown) {
 
 // doLogout - close map and return to login
 function doLogout() {
+  $("#logo").show()
   $("#heading").html(loginHeading)
   $("#loginForm").show()
   $("#logoutButton").hide()
