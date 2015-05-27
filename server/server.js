@@ -26,10 +26,8 @@ app.use(function(req, res, next) {
 
 // Set configuration defaults
 
-var curl2Cmx = null
 var virtualize = false
-var virtualCMXServer = require("./virtualCMXServer")
-virtualCMXServer.implement()
+var virtualCMXServer = null
 configure()
 
 // Implement local methods
@@ -69,21 +67,22 @@ router.post("/local/config", function(req,res) {
 // Implement CMX pass-through methods
 
 router.get(/^(.*)$/, function(req,res) {
-  cmd = curl2Cmx + req.path
-  if (virtualize || (null !=  req.path.match(/^\/config\/v1\/maps\/imagesource/))) {
+  if (typeof req.query.token != "string" || req.query.token.length == 0 ) {
+    res.status(400).json({"error": "Missing token on request"})
+    return
+  }
+  if (virtualize) {
     virtualCMXServer.respond(req, res)
   }
   else {
-    console.log("Pass-thru command: " + req.path)
-    exec(cmd, {maxBuffer: 1024*2000}, function(error, stdout, stderr) {
-      if (! error) {
-        console.log("Request OK")
-        res.send(stdout)
-      } else {
-        console.log("Request failed: " + stderr + " (" + error + ")")
-        res.status(400).json({error: stderr})
+    console.log("Pass-through command: " + req.path)
+    request({
+      url: nconf.get("cmxServer") + req.path,
+      headers: {
+        "Authorization": "Basic " + req.query.token
       }
     })
+    .pipe(res)
   }
 })
 
@@ -105,9 +104,6 @@ function configure() {
     console.log("Auth token for user " + username + " is " + authToken)
     nconf.set("authToken", authToken)
   }
-  curl2Cmx = "curl -k -H \"Authorization: Basic " + 
-             nconf.get("authToken") + "\" " + nconf.get("cmxServer")
-  console.log("curl2Cmx: " + curl2Cmx)
 
   // Implement server virtualization if requested
 
@@ -116,7 +112,9 @@ function configure() {
       console.log("Server virtualization active - CMX server will not be accessed")
     }
   } else if (virtualize) {
-    console.log("Server virtualization now inactive - requests will pass through to CMX")
+      var virtualCMXServer = require("./virtualCMXServer")
+      virtualCMXServer.implement()
+      console.log("Server virtualization now inactive - requests will pass through to CMX")
   }
   virtualize = nconf.get("virtualize")
 }
