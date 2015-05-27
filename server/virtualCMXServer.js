@@ -1,8 +1,9 @@
 /*
 virtualCMXServer - implement virtual CMX server for use when CMX is down
-We assume the existence of a testData directory with two files
+We assume the existence of a testData directory with two JSON files
   allClients.json - contains an array of all clients by MAC address
   history.json - contains an array of a single client's history
+and all image files that can be retrieved by /config/v1/maps/imagesource
 
 Author: David Tootill 2015.05.22
 Copyright (C) Cisco, Inc.  All rights reserved.
@@ -15,7 +16,6 @@ var fs = require("fs")
 
 // implement() - set up server virtualization
 function implement() {
-  console.log("Server virtualization active - CMX server will not be accessed")
   allClients = require("./testData/allClients.json")
   history = require("./testData/history.json")
 }
@@ -46,6 +46,7 @@ function respond(req, res) {
     }
     res.status(404).send({error: "Client " + matches[1] + " not found"})
 
+  } else if (null != (matches = req.path.match(/^\/config\/v1\/maps\/imagesource\/([^\.\/]+\.)([^\.\/]+)$/))) {
     fs.readFile("./testData/"+matches[1]+matches[2], function(err, img) {
       if (err) {
         res.status(404).send({error: "Image " + matches[1]+matches[2] + " not available from virtualized server"})
@@ -55,7 +56,7 @@ function respond(req, res) {
       }
     })
   } else {
-      res.status(500).send({error: "Method " + req.path + " has not been virtualized"})
+      res.status(500).send({error: "Method " + req.path + " is not supported by virtualized server"})
   }
 }
 

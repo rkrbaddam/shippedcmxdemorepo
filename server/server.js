@@ -5,10 +5,13 @@ Author: David Tootill 2015.05.22
 Copyright (C) Cisco, Inc.  All rights reserved.
 */
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 var express    = require("express");
 var app        = express();
 var bodyParser = require("body-parser")
 var exec       = require("child_process").exec
+var request    = require("request")
 
 var nconf = require("nconf");
 nconf.argv()
@@ -16,12 +19,17 @@ nconf.argv()
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
+app.use(function(req, res, next) {
+  res.header('Access-Control-Allow-Origin', "*")
+  next()
+})
 
 // Set configuration defaults
 
 var curl2Cmx = null
 var virtualize = false
-var virtualCMXServer = null
+var virtualCMXServer = require("./virtualCMXServer")
+virtualCMXServer.implement()
 configure()
 
 // Implement local methods
@@ -62,15 +70,17 @@ router.post("/local/config", function(req,res) {
 
 router.get(/^(.*)$/, function(req,res) {
   cmd = curl2Cmx + req.path
-  if (virtualize) {
+  if (virtualize || (null !=  req.path.match(/^\/config\/v1\/maps\/imagesource/))) {
     virtualCMXServer.respond(req, res)
   }
   else {
     console.log("Pass-thru command: " + req.path)
-    exec(cmd, function(error, stdout, stderr) {
+    exec(cmd, {maxBuffer: 1024*2000}, function(error, stdout, stderr) {
       if (! error) {
-        res.send(JSON.parse(stdout))
+        console.log("Request OK")
+        res.send(stdout)
       } else {
+        console.log("Request failed: " + stderr + " (" + error + ")")
         res.status(400).json({error: stderr})
       }
     })
@@ -103,8 +113,7 @@ function configure() {
 
   if (nconf.get("virtualize")) {
     if (! virtualize) {
-      virtualCMXServer = require("./virtualCMXServer")
-      virtualCMXServer.implement()
+      console.log("Server virtualization active - CMX server will not be accessed")
     }
   } else if (virtualize) {
     console.log("Server virtualization now inactive - requests will pass through to CMX")
