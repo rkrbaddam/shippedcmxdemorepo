@@ -64,20 +64,29 @@ function doLogin(password) {
    .fail(showRestError)
 }
 
-// showRestError - format a REST error response
+// showRestError - format an error message after a REST call failure
 function showRestError(jqXHR, textStatus, errorThrown) {
-  if (typeof jqXHR.responseJSON == "object" &&
-      typeof jqXHR.responseJSON.error == "string") {
-    setError("Error: " + jqXHR.responseJSON.error)
-  } else if (errorThrown.length  > 0) {
-    setError("Error: " + errorThrown)
-  } else {
+  if (typeof jqXHR != "object" || typeof jqXHR.status != "number" || jqXHR.status == 0) {
     setError("Error: No response. Is the server at " + global["server"] + " running?")
+  } else {
+     var msg = "Error " + jqXHR.status + " " + jqXHR.statusText;
+     if (typeof errorThrown == "string" && errorThrown.length > 0 && errorThrown != jqXHR.statusText) {
+       msg += "; " + errorThrown
+     }
+     else if (typeof jqXHR.responseJSON == "object" ) {
+       msg += "; " + JSON.stringify(jqXHR.responseJSON)
+     }
+     else if (typeof jqXHR.responseText == "string" &&
+              jqXHR.responseText.length > 0) {
+       msg += "; " + JSON.responseText
+     }
+     setError(msg)
   }
 }
 
 // doLogout - close map and return to login
 function doLogout() {
+  setError()
   global["mapDisplayedOnce"] = false
   $("#logo").show()
   $("#heading").html(loginHeading)

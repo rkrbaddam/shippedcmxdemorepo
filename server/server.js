@@ -82,7 +82,14 @@ router.get(/^(.*)$/, function(req,res) {
         "Authorization": "Basic " + req.query.token
       }
     })
-    .pipe(res)
+    .on('error', function(e) {
+      console.log(e)
+      res.status(500).json(e)
+    })
+    .pipe(res).on('error', function(e) {
+      console.log(e)
+      res.status(500).json(e)
+    })
   }
 })
 
