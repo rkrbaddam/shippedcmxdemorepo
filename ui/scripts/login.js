@@ -8,7 +8,7 @@
 var global = new Object() // Global values
 
 var restApiRoot = "/api"
-var loginHeading = "Welcome to Connected Mobile Experiences on Shipped"
+var loginHeading = "Welcome to Connected Mobile Experiences on <a href='http://ciscocloud.github.io/shipped/dist/#/'>Shipped</a>"
 
 // validate - Validate user's login info
 function validate()
@@ -78,6 +78,7 @@ function showRestError(jqXHR, textStatus, errorThrown) {
 
 // doLogout - close map and return to login
 function doLogout() {
+  global["mapDisplayedOnce"] = false
   $("#logo").show()
   $("#heading").html(loginHeading)
   $("#loginForm").show()

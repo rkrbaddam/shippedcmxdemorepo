@@ -39,7 +39,7 @@
 #map {
   position:relative;
   position: fixed;
-  top: 60%;
+  top: 65%;
   left: 50%;
   /* bring your own prefixes */
   transform: translate(-50%, -80%);
@@ -52,6 +52,11 @@
   -webkit-box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px 0px;
   -moz-box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px 0px;
   box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px 0px;
+}
+
+.mapCaption {
+  font-size: 15px;
+  font-style: italic;
 }
 
 .point { 
@@ -69,20 +74,23 @@
 }
 
 .userPoint {
-  display:block; width:10px; height:10px;
+  display:block; width:15px; height:15px;
   position:absolute;
-  color: white;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  border-radius: 5px;
+  color: black;
+  background-color: greenyellow; 
+  text-align: center;
+  text-decoration: none;
+  align-items: center;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  border-radius: 10px;
 }
 
-.userPoint2 {
-  display:block; width:5px; height:5px;
+.userPointCaption {
+  display:block;
+  height:15px;
   position:absolute;
-  -moz-border-radius: 2px;
-  -webkit-border-radius: 2px;
-  border-radius: 2px;
+  color: white;
 }
 
 table.t1 {

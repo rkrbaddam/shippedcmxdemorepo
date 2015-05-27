@@ -7,10 +7,25 @@
 
 var user
 var scale
+var mapName
+var imageName
+var userListButton = "<button onClick='returnToUserList()'>Show List of All Users</button>"
+var allUserMapButton = "<button onClick='showUserMap()'>Show Map of All Users</button>"
+var historyLengthToShow = 10
+var historyMinimumGapSeconds = 10
 
-function showAllUserMap(mapName, imageName, userToShow) {
-  $("#heading").html("Map of " + mapName)
-  $("#content").html("<button onClick='returnToUserList()'>Return to User List</button>")
+// showUserMap - show the map of users
+// Arguments:
+//   mapNameArg   - human-readable name of map for header
+//   imageNameArg - filename of image to show
+//   userToShow   - index of user for which history is desired; -1 to show all users
+function showUserMap(mapNameArg, imageNameArg, userToShow) {
+  if (typeof mapNameArg == "string") {
+    mapName = mapNameArg
+  }
+  if (typeof imageNameArg == "string") {
+    imageName = imageNameArg
+  }
   $("#content").show()
   var userlist = global["userlist"]
   var $map = jQuery('#map');
@@ -18,37 +33,44 @@ function showAllUserMap(mapName, imageName, userToShow) {
   var $w = userlist[0].mapInfo.floorDimension.width    // in feet width of image
   var $h = userlist[0].mapInfo.floorDimension.length   // in feet height of image
   var imgWidth = $(window).width()
-  var scale = imgWidth / $w;
+  scale = imgWidth / $w;
   $w = imgWidth
   $h = $h * scale
-  //alert(userlist[0].mapInfo.image.imageName);
   $map.css({width: imgWidth + 'px', height:$h+'px',backgroundImage:'url('+imgUrl+')',backgroundSize:$w+'px '+$h+'px' });
-  for (var i = 0; i < userlist.length; i++) {
-      var user = userlist[i]
-      var $wc = user.mapCoordinate.x * scale
-      var $hc = user.mapCoordinate.y * scale
-      var $unm = user.userName
-      var newLink = $("<a />", {
-          href : "#",
-          text: $unm,
-          class:"point",
-          onClick: "showUser(" + i + "," + scale + ")"
-      });
-      newLink.css({top:$hc + 'px', left: $wc+ 'px'});
-      $map.append(newLink);
-  }
   $map.show()
-  if (userToShow >= 0) {
-    showUser(userToShow, scale)
+  if (typeof userToShow == "number" && userToShow >= 0) {
+    getUserHistory(userToShow)
+  } else {
+    // Add links for individual users
+    $("#heading").html("Map of All Users in Room " + mapName)
+    $("#content").html(userListButton)
+    $("#content").append("<br><br><span class='mapCaption'>Click on a user in the map below to display their location history</span>")
+    for (var i = 0; i < userlist.length; i++) {
+        var user = userlist[i]
+        var x = user.mapCoordinate.x * scale
+        var y = user.mapCoordinate.y * scale
+        var $unm = user.userName
+        var newLink = $("<a />", {
+            href : "#",
+            text: $unm,
+            class:"point",
+            onClick: "getUserHistory(" + i + ")"
+        });
+        newLink.css({top:y + 'px', left: x+ 'px'});
+        $map.append(newLink);
+    }
+    $(".userPoint").remove()
   }
 }
 
-function showUser(i, myScale)
+function getUserHistory(i)
 {
+  $(".point").remove()
   $(".userPoint").remove()
-  $(".userPoint2").remove()
-  scale = myScale
+  $("#content").html(userListButton + "&nbsp;&nbsp" + allUserMapButton)
+  $("#content").append("<br><br><span class='mapCaption'>Points are numbered from the most recent; hover over a point to see its exact time</span>")
   var user = global["userlist"][i]
+  $("#heading").html("Location History of User " + user.userName + " at MAC Address " + user.macAddress)
   $.get(
       cmxUrl("/location/v1/history/clients/" + user.macAddress),
       showUserHistory,
@@ -58,32 +80,32 @@ function showUser(i, myScale)
 
 function showUserHistory(history) {
   var $map = jQuery('#map');
-  var $color = "#ff0000"
-  for (var i = 0; i < 50; i++) {
-    var $wc = history[i].mapCoordinate.x * scale
-    var $hc = history[i].mapCoordinate.y * scale
-    var $ts = history[i].sourceTimestamp
-    $ts = new Date($ts*1000)
-    var newLink 
-    if (i%5 == 0) {
-      newLink = $("<a />", {
-          href: "#",
-          title: $ts,
-          text: 1 + (i / 5),
-          class:"userPoint"
-      }).css({top:$hc + 'px', left: $wc+ 'px',backgroundColor:$color})
-    } else {
-      newLink = $("<a />", {
-          href: "#",
-          class:"userPoint2"
-      }).css({top:$hc + 'px', left: $wc+ 'px',backgroundColor:$color})
+  var timeOfLastPoint = 0
+  var minGapMS = historyMinimumGapSeconds*1000
+  var pointsShown = 0
+  for (var i = 0; pointsShown < historyLengthToShow && i < history.length; i++) {
+    var timestamp = history[i].sourceTimestamp
+    if (timestamp - timeOfLastPoint >= minGapMS) {
+      var x = history[i].mapCoordinate.x * scale
+      var y = history[i].mapCoordinate.y * scale
+      timestamp = new Date(timestamp*1000)
+      $map.append( $("<a />", {
+            href: "#",
+            title: timestamp,
+            text: ++pointsShown, 
+            class:"userPoint"
+        }).css({top:y + 'px', left: x+ 'px'}))
+      $map.append($("<span />", {
+            text: timestamp.toLocaleTimeString(),
+            class:"userPointCaption"
+        }).css({top:y + 'px', left: (x+18) + 'px'}))
     }
-    $map.append(newLink);
   }
 }
 
 function returnToUserList() {
   $("#map").hide()
+  $("#content").hide()
   getUsers()
 }
 

@@ -5,7 +5,9 @@
  * Copyright (C) 2015 Cisco.  All rights reserved.
  */
 
+// getUsers - fetch the list of all active users from the server
 function getUsers() {
+  $("#heading").empty()
   $.get(
       cmxUrl("/location/v1/clients"),
       listUsers,
@@ -15,6 +17,17 @@ function getUsers() {
 
 function listUsers(userlist) {
   global["userlist"] = userlist
+
+  // If we've never seen a map, display the map for the first user's room
+
+  if (!global["mapDisplayedOnce"]) {
+    global["mapDisplayedOnce"] = true
+    doAllUserMap(0)
+    return
+  }
+
+  // Display a listing of all users
+
   $("#heading").html("CMX User List")
   var table = $("<table></table>").addClass("t1")
   table.append("<thead><tr>" +
@@ -42,7 +55,7 @@ function listUsers(userlist) {
       var mapName = user.mapInfo.mapHierarchyString 
       var row = "<tr>" +
                 "<td>" + (i+1) + "</td>" +
-                "<td><a href='#' onClick='return doUserMap(" + i + ")' title='" + historyTitle + mac + "'>" + username + "</td>" +
+                "<td><a href='#' onClick='return doUserLocationHistory(" + i + ")' title='" + historyTitle + mac + "'>" + username + "</td>" +
                 "<td>" + apMac + "</td>" +
                 "<td>" + mac + "</td>" +
                 "<td>" + firstTime + "</td>" +
@@ -57,16 +70,18 @@ function listUsers(userlist) {
   $("#content").show()
 }
 
-function doUserMap(i) {
-  $("#content").hide()
-  var mapInfo = global["userlist"][i].mapInfo
-  showAllUserMap(mapInfo.mapHierarchyString, mapInfo.image.imageName, i)
-  return false
-}
-
+// doAllUserMap - display a map with the current location of all users
 function doAllUserMap(i) {
   $("#content").hide()
   var mapInfo = global["userlist"][i].mapInfo
-  showAllUserMap(mapInfo.mapHierarchyString, mapInfo.image.imageName, -1)
+  showUserMap(mapInfo.mapHierarchyString, mapInfo.image.imageName, -1)
+  return false
+}
+
+// doUserLocationHistory - display a map for a single user showing their location history
+function doUserLocationHistory(i) {
+  $("#content").hide()
+  var mapInfo = global["userlist"][i].mapInfo
+  showUserMap(mapInfo.mapHierarchyString, mapInfo.image.imageName, i)
   return false
 }
