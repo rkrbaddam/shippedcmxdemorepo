@@ -12,7 +12,7 @@ var imageName
 var userListButton = "<button onClick='returnToUserList()'>Show List of All Users</button>"
 var allUserMapButton = "<button onClick='showUserMap()'>Show Map of All Users</button>"
 var historyLengthToShow = 10
-var historyMinimumGapSeconds = 10
+var historyMinimumGapSeconds = 60
 
 // showUserMap - show the map of users
 // Arguments:
@@ -27,7 +27,7 @@ function showUserMap(mapNameArg, imageNameArg, userToShow) {
     imageName = imageNameArg
   }
   $("#content").show()
-  var userlist = global["userlist"]
+  var userlist = global.userlist
   var $map = jQuery('#map');
   var imgUrl = cmxUrl("/config/v1/maps/imagesource/" + imageName)
   var $w = userlist[0].mapInfo.floorDimension.width    // in feet width of image
@@ -36,7 +36,7 @@ function showUserMap(mapNameArg, imageNameArg, userToShow) {
   scale = imgWidth / $w;
   $w = imgWidth
   $h = $h * scale
-  $map.css({width: imgWidth + 'px', height:$h+'px',backgroundImage:'url('+imgUrl+')',backgroundSize:$w+'px '+$h+'px' });
+  $map.css({width: imgWidth + 'px', height:$h+'px', backgroundImage:'url('+imgUrl+')', backgroundSize:$w+'px '+$h+'px' });
   $map.show()
   if (typeof userToShow == "number" && userToShow >= 0) {
     getUserHistory(userToShow)
@@ -49,10 +49,9 @@ function showUserMap(mapNameArg, imageNameArg, userToShow) {
         var user = userlist[i]
         var x = user.mapCoordinate.x * scale
         var y = user.mapCoordinate.y * scale
-        var $unm = user.userName
         var newLink = $("<a />", {
             href : "#",
-            text: $unm,
+            text: user.userName,
             class:"point",
             onClick: "getUserHistory(" + i + ")"
         });
@@ -67,10 +66,11 @@ function showUserMap(mapNameArg, imageNameArg, userToShow) {
 function getUserHistory(i)
 {
   $(".point").remove()
+  $(".userPoint").remove()
   $(".userPointCaption").remove()
   $("#content").html(userListButton + "&nbsp;&nbsp" + allUserMapButton)
   $("#content").append("<br><br><span class='mapCaption'>Points are numbered from the most recent; hover over a point to see its exact time</span>")
-  var user = global["userlist"][i]
+  var user = global.userlist[i]
   $("#heading").html("Location History of User " + user.userName + " at MAC Address " + user.macAddress)
   $.get(
       cmxUrl("/location/v1/history/clients/" + user.macAddress),
@@ -107,6 +107,7 @@ function showUserHistory(history) {
 function returnToUserList() {
   $("#map").hide()
   $("#content").hide()
+  setError()
   getUsers()
 }
 

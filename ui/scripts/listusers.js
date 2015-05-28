@@ -16,12 +16,12 @@ function getUsers() {
 }
 
 function listUsers(userlist) {
-  global["userlist"] = userlist
+  global.userlist = userlist
 
   // If we've never seen a map, display the map for the first user's room
 
-  if (!global["mapDisplayedOnce"]) {
-    global["mapDisplayedOnce"] = true
+  if (!global.mapDisplayedOnce) {
+    global.mapDisplayedOnce = true
     doAllUserMap(0)
     return
   }
@@ -44,27 +44,23 @@ function listUsers(userlist) {
   var mapTitle = "Display all users at location "
   for (var i = 0; i < userlist.length; i++) {
     var user = userlist[i]
-    if (user.userName != user ||
-        user.apMacAddress != apMac ||
-        user.macAddress != mac) {
-      var username = user.userName
-      var apMac = user.apMacAddress
-      var mac = user.macAddress
-      var firstTime = user.statistics.firstLocatedTime.replace("T"," ").replace(/[+-]\d+$/,"")
-      var lastTime = user.statistics.lastLocatedTime.replace("T"," ").replace(/[+-]\d+$/,"")
-      var mapName = user.mapInfo.mapHierarchyString 
-      var row = "<tr>" +
-                "<td>" + (i+1) + "</td>" +
-                "<td><a href='#' onClick='return doUserLocationHistory(" + i + ")' title='" + historyTitle + mac + "'>" + username + "</td>" +
-                "<td>" + apMac + "</td>" +
-                "<td>" + mac + "</td>" +
-                "<td>" + firstTime + "</td>" +
-                "<td>" + lastTime + "</td>" +
-                "<td><a href='x' onClick='return doAllUserMap(" + i + ")' title='" + mapTitle + mapName + "'>" + mapName + "</td>" +
-                "<td>" + user.mapInfo.image.imageName + "</td>" +
-                "</tr>"
-      table.append(row)
-    }
+    var username = user.userName
+    var apMac = user.apMacAddress
+    var mac = user.macAddress
+    var firstTime = user.statistics.firstLocatedTime.replace("T"," ").replace(/[+-]\d+$/,"")
+    var lastTime = user.statistics.lastLocatedTime.replace("T"," ").replace(/[+-]\d+$/,"")
+    var mapName = user.mapInfo.mapHierarchyString 
+    var row = "<tr>" +
+              "<td>" + (i+1) + "</td>" +
+              "<td><a href='#' onClick='return doUserLocationHistory(" + i + ")' title='" + historyTitle + mac + "'>" + username + "</td>" +
+              "<td>" + apMac + "</td>" +
+              "<td>" + mac + "</td>" +
+              "<td>" + firstTime + "</td>" +
+              "<td>" + lastTime + "</td>" +
+              "<td><a href='x' onClick='return doAllUserMap(" + i + ")' title='" + mapTitle + mapName + "'>" + mapName + "</td>" +
+              "<td>" + user.mapInfo.image.imageName + "</td>" +
+              "</tr>"
+    table.append(row)
   }
   $("#content").html(table)
   $("#content").show()
@@ -73,7 +69,7 @@ function listUsers(userlist) {
 // doAllUserMap - display a map with the current location of all users
 function doAllUserMap(i) {
   $("#content").hide()
-  var mapInfo = global["userlist"][i].mapInfo
+  var mapInfo = global.userlist[i].mapInfo
   showUserMap(mapInfo.mapHierarchyString, mapInfo.image.imageName, -1)
   return false
 }
@@ -81,7 +77,7 @@ function doAllUserMap(i) {
 // doUserLocationHistory - display a map for a single user showing their location history
 function doUserLocationHistory(i) {
   $("#content").hide()
-  var mapInfo = global["userlist"][i].mapInfo
+  var mapInfo = global.userlist[i].mapInfo
   showUserMap(mapInfo.mapHierarchyString, mapInfo.image.imageName, i)
   return false
 }

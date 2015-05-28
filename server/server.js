@@ -7,16 +7,23 @@ Copyright (C) Cisco, Inc.  All rights reserved.
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-var express    = require("express");
-var app        = express();
-var bodyParser = require("body-parser")
-var exec       = require("child_process").exec
-var request    = require("request")
+var express     = require("express");
+var bodyParser  = require("body-parser")
+var exec        = require("child_process").exec
+var request     = require("request")
+var serveStatic = require("serve-static")
+var compression = require("compression")
+var virtualCMXServer = require("./virtualCMXServer")
 
 var nconf = require("nconf");
 nconf.argv()
-     .file({file: __dirname + "/config.json"});
+     .file({file: __dirname + "/config.json"})
 
+// Set up middleware to serve UI static content
+
+var app = express();
+app.use(compression())
+app.use(serveStatic(__dirname + "/../ui")) 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 app.use(function(req, res, next) {
@@ -26,47 +33,38 @@ app.use(function(req, res, next) {
 
 // Set configuration defaults
 
-var virtualize = false
-var virtualCMXServer = null
-configure()
+var virtualize = nconf.get("virtualize")
+var cmxServer = nconf.get("cmxServer")
 
 // Implement local methods
 
-var router = express.Router();
-router.get("/", function(req, res) {
-    res.json({ message: "Shipped CMX Demo Server" })
-})
+var localRouter = express.Router();
+var localApiRoot = "/local"
+app.use(localApiRoot, localRouter)
 
-// Implement config method to set configuration
+// Implement config method to get and set configuration
 
-router.post("/local/config", function(req,res) {
-  for (var key in req.body) {
-    switch(key) {
-      case "authToken":
-      case "cmxServer":
-      case "password":
-      case "username":
-      case "virtualize":
-        console.log("Setting " + key + " = " + req.body[key])
-        nconf.set(key, req.body[key])
-        break
-
-      default:
-        res.status(400).json({error: "Unknown local config keyword '" + key + "'"})
-        return
-    }
+localRouter.get("/config", function(req,res) {
+  var config = {
+    cmxServer: cmxServer,
+    virtualize: virtualize
   }
-  configure()
-  res.json({username: nconf.get("username"),
-            password: nconf.get("password"),
-            authToken: nconf.get("authToken"),
-            cmxServer: nconf.get("cmxServer"),
-            virtualize: nconf.get("virtualize")})
+  res.json(config)
 })
+
+localRouter.post("/config", setLocalConfig)
 
 // Implement CMX pass-through methods
 
-router.get(/^(.*)$/, function(req,res) {
+var apiRouter = express.Router();
+var restApiRoot = "/api"
+app.use(restApiRoot, apiRouter)
+
+apiRouter.get("/", function(req, res) {
+    res.json({ message: "Shipped CMX Demo Server" })
+})
+
+apiRouter.get(/^(.*)$/, function(req,res) {
   if (typeof req.query.token != "string" || req.query.token.length == 0 ) {
     res.status(400).json({"error": "Missing token on request"})
     return
@@ -77,7 +75,7 @@ router.get(/^(.*)$/, function(req,res) {
   else {
     console.log("Pass-through command: " + req.path)
     request({
-      url: nconf.get("cmxServer") + req.path,
+      url: cmxServer + restApiRoot + req.path,
       headers: {
         "Authorization": "Basic " + req.query.token
       }
@@ -93,35 +91,68 @@ router.get(/^(.*)$/, function(req,res) {
   }
 })
 
-app.use(nconf.get("restApiRoot"), router)
 
 // Start the server
-var port = nconf.get("port")
-app.listen(port)
-console.log("CMX demo server listening on port " + port)
+app.listen(nconf.get("port"))
+console.log(statusMessage())
 
-// configure() - set local configuration values
-function configure() {
-  // Set authorization token
+// setLocalConfig - implement the /local/config POST request
+function setLocalConfig(req, res) {
+  var userInfo = new Object()
+  var configChanged = false
+  for (var key in req.body) {
+    console.log("Setting " + key + " = " + req.body[key])
+    switch(key) {
+      case "username":
+      case "password":
+        userInfo[key] = req.body[key]
+        break;
 
-  username = nconf.get("username")
-  password = nconf.get("password")
-  if (typeof username == "string" && typeof password == "string" && username != "-") {
-    var authToken = new Buffer(username + ":" + password).toString("base64");
-    console.log("Auth token for user " + username + " is " + authToken)
-    nconf.set("authToken", authToken)
-  }
+      case "cmxServer":
+        if (req.body[key] != cmxServer) {
+          cmxServer = req.body[key]
+          configChanged = true
+        }
+        break
 
-  // Implement server virtualization if requested
+      case "virtualize":
+        var newSetting = (req.body[key] == "true")
+        if (newSetting != virtualize) {
+          console.log("Changing virtualize setting from " + virtualize + " to " + newSetting)
+          virtualize = newSetting
+          configChanged = true
+        }
+        break
 
-  if (nconf.get("virtualize")) {
-    if (! virtualize) {
-      console.log("Server virtualization active - CMX server will not be accessed")
+      default:
+        res.status(400).json({error: "Unknown local config keyword '" + key + "'"})
+        return
     }
-  } else if (virtualize) {
-      var virtualCMXServer = require("./virtualCMXServer")
-      virtualCMXServer.implement()
-      console.log("Server virtualization now inactive - requests will pass through to CMX")
   }
-  virtualize = nconf.get("virtualize")
+
+  // Write a log message if we changed CMX server
+
+  if (configChanged) {
+    console.log(statusMessage())
+  }
+
+  // Build an auth token if caller specified userid and password
+
+  var config = {
+    cmxServer: cmxServer,
+    virtualize: virtualize
+  }
+  if (typeof userInfo.username == "string" &&
+      typeof userInfo.password == "string" ) {
+    config.authToken = new Buffer(userInfo.username + ":" + userInfo.password).toString("base64");
+  }
+  res.json(config)
+}
+
+function statusMessage() {
+  var msg = "Server is listening on port " + nconf.get("port")
+  if (virtualize) {
+    return msg + " and virtualizing the CMX server with local file data"
+  }
+  return msg + " and obtaining data from CMX server " + cmxServer
 }

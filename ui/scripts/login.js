@@ -5,27 +5,47 @@
  * Copyright (C) 2015 Cisco.  All rights reserved.
  */
 
-var global = new Object() // Global values
-
 var restApiRoot = "/api"
 var loginHeading = "Welcome to Connected Mobile Experiences on <a href='http://ciscocloud.github.io/shipped/dist/#/'>Shipped</a>"
+
+// Fetch initial configuration from server and adjust form
+
+$(document).ready(function() {
+   var path = window.location.href.split("/")
+   global.server = path[0] + "//" + path[2]
+   $.get(
+      global.server + "/local/config",
+      function(config) {
+        global.cmxServer = config.cmxServer
+        if (config.virtualize) {
+          $("#virtualize").prop('checked', true)
+        }
+        setVirtualize()
+      },
+      "json")
+   .fail(showRestError)
+})
 
 // validate - Validate user's login info
 function validate()
 {
     if(validateServer()) {
-        global["username"] = document.getElementById("pass").value;
-        var password = document.getElementById("pass").value;
+        global.username = $("#user").val()
+        var password = $("#pass").val();
         doLogin(password)
     }
 }
 
-// validateServer - Verify server specifies a URL of the form http[s]://xxx:nnn
+// validateServer - Verify CMX server specifies a URL of the form http[s]://xxx:nnn
 function validateServer()
 {
-    var server = document.getElementById("server").value
-    if (server.match(/https?:\/\/[^:]+:\d+/)) {
-        global["server"] = server + restApiRoot
+    if ($("#virtualize").is(":checked")) {
+      return true
+    }
+
+    var server = $("#cmxServer").val()
+    if (server.match(/^https?:\/\/[^:]+:\d+$/)) {
+        global.cmxServer = server
         return true;
     }
     else
@@ -35,26 +55,19 @@ function validateServer()
     }
 }
 
-
-// setError - report an error
-function setError(message) {
-  if (typeof message == "string" && message.length > 0) {
-    $("#errorMessage").html(message)
-    $("#errorMessage").show()
-  } else {
-    $("#errorMessage").empty()
-    $("#errorMessage").hide()
-  }
-}
-
 // doLogin - get API authorization token from server
 function doLogin(password) {
   $.post(
-      global["server"] + "/local/config",
-     {"username": global["username"], "password": password},
+     global.server + "/local/config", 
+     {
+       "username": global.username,
+       "password": password,
+       "cmxServer": global.cmxServer,
+       "virtualize": $("#virtualize").is(":checked")
+     },
      function(data) {
        setError()
-       global["apiToken"] = data.authToken
+       global.apiToken = data.authToken
        $("#loginForm").hide()
        $("#logo").hide()
        $("#heading").html('')
@@ -64,30 +77,10 @@ function doLogin(password) {
    .fail(showRestError)
 }
 
-// showRestError - format an error message after a REST call failure
-function showRestError(jqXHR, textStatus, errorThrown) {
-  if (typeof jqXHR != "object" || typeof jqXHR.status != "number" || jqXHR.status == 0) {
-    setError("Error: No response. Is the server at " + global["server"] + " running?")
-  } else {
-     var msg = "Error " + jqXHR.status + " " + jqXHR.statusText;
-     if (typeof errorThrown == "string" && errorThrown.length > 0 && errorThrown != jqXHR.statusText) {
-       msg += "; " + errorThrown
-     }
-     else if (typeof jqXHR.responseJSON == "object" ) {
-       msg += "; " + JSON.stringify(jqXHR.responseJSON)
-     }
-     else if (typeof jqXHR.responseText == "string" &&
-              jqXHR.responseText.length > 0) {
-       msg += "; " + JSON.responseText
-     }
-     setError(msg)
-  }
-}
-
 // doLogout - close map and return to login
 function doLogout() {
   setError()
-  global["mapDisplayedOnce"] = false
+  global.mapDisplayedOnce = false
   $("#logo").show()
   $("#heading").html(loginHeading)
   $("#loginForm").show()
@@ -99,7 +92,14 @@ function doLogout() {
   $("#map").css({backgroundImage:"none"})
 }
 
-// cmxUrl - build a CMX URL
-function cmxUrl(method) {
-  return global["server"] + method + "?token=" + global["apiToken"]
+// setVirtualize - respond to setting of the virtualize checkbox
+function setVirtualize() {
+  if ($("#virtualize").is(":checked")) {
+    $("#cmxServer").prop('disabled', true)
+    $("#cmxServer").val("n/a")
+  } else {
+    $("#cmxServer").prop('disabled', false)
+    $("#cmxServer").val(global.cmxServer)
+  }
+  return true
 }

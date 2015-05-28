@@ -1,7 +1,5 @@
 {
-  "restApiRoot": "/api",
   "port": 3000,
-  "cmxServer":"https://64.103.26.61:8081/api",
-  "authToken":"bGVhcm5pbmc6bGVhcm5pbmc=",
-  "virtualize": false
+  "cmxServer":"https://64.103.26.61:8081",
+  "virtualize": true
 }
