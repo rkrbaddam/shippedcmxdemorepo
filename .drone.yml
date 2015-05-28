@@ -14,6 +14,6 @@ publish:
     username: npateriyainsecure
     password: githubpassword
     email: npateriya@yahoo.com
-    image_name: npateriyainsecure/expresscmx
+    image_name: npateriyainsecure/shipped-cmxdemo:commitd
     push_latest: true
     tag: $DRONE_COMMIT
