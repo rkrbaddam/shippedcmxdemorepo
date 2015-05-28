@@ -4,9 +4,9 @@ git:
   path: github.com/npateriya/expresscmx
 
 script:
-  - echo "build commands"
-  - ./bin/build
-  - ./bin/test
+  - echo Install Node packages
+  - bash bin/build
+  - bash bin/test
 
 publish:
   docker:
