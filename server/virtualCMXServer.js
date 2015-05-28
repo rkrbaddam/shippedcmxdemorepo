@@ -19,9 +19,6 @@ function respond(req, res) {
   if (allClients == null ) {
     allClients = require(__dirname + "/testData/allClients.json")
   }
-  if (history == null ) {
-    history = require(__dirname + "/testData/history.json")
-  }
   if (null != req.path.match(/location\/v1\/clients\/count$/)) {
     res.json({count: allClients.length})
 
@@ -29,12 +26,14 @@ function respond(req, res) {
     res.send(allClients)
 
   } else if (null != (matches = req.path.match(/location\/v1\/history\/clients\/([0-9a-f:]+)/))) {
-    if (history[0].macAddress == matches[1]) {
-      res.send(history)
-    } else {
-      res.status(404).send({error: "Client " + matches[1] + " history not available; history is available only for " + history[0].macAddress})
-    }
-
+    var filename = "history_" + matches[1].replace(/:/g, "-") + ".json"
+    fs.readFile(__dirname + "/testData/" + filename, function(err, data) {
+      if (err) {
+        res.status(404).send({error: "History for client with MAC address " + matches[1] + " has not been virtualized"})
+      } else {
+        res.send(data)
+      }
+    })
   } else if (null != (matches = req.path.match(/location\/v1\/clients\/([0-9a-f:]+)/))) {
     for (var i = 0; i < allClients.length; i++) {
       var client = allClients[i]
