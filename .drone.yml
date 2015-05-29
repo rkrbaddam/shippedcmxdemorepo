@@ -20,3 +20,9 @@ publish:
     image_name: npateriyainsecure/shipped-cmxdemo
     push_latest: true
     tag: $DRONE_COMMIT
+
+notify:
+  webhook:
+    urls:
+      - "http://shipped-api.shipped-cisco.com/webhooks/drone"
+    on_success: true
