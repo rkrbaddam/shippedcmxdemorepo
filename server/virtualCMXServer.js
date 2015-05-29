@@ -20,7 +20,11 @@ function respond(req, res) {
     allClients = require(__dirname + "/testData/allClients.json")
   }
   if (null != req.path.match(/location\/v1\/clients\/count$/)) {
-    res.json({count: allClients.length})
+    res.json({
+      count: allClients.length,
+      deviceQueryString: null,
+      deviceType: "Wireless_Client",
+    })
 
   } else if (null != req.path.match(/location\/v1\/clients$/)) {
     res.send(allClients)
