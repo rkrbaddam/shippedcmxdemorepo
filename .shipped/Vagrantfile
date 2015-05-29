@@ -1,0 +1,30 @@
+Vagrant.require_version ">= 1.6.0"
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+	config.vm.define "dockerhost-static-shipped-cmxdemo", autostart: false do |docker|
+  	docker.vm.provision "docker"
+  	docker.vm.box = "yungsang/boot2docker"
+  	docker.vm.box_check_update = false
+    docker.vm.network "forwarded_port", guest: 2735,  host: 2375, auto_correct: true
+  	docker.vm.network "forwarded_port", guest: 30000, host: 30000, auto_correct: true
+  	docker.vm.provider :virtualbox do |vb|
+  		vb.name = "dockerhost-static-shipped-cmxdemo"
+  	end
+  end
+
+  
+  
+ config.vm.define "shipped-cmxdemo" do |svc|
+      svc.vm.provider "docker" do |d|
+        d.build_dir = "../"
+        d.force_host_vm = true
+        d.ports = ["30000:3000"]
+        d.name = "shipped-cmxdemo"
+        
+        d.vagrant_vagrantfile = "./Vagrantfile"
+        d.vagrant_machine = "dockerhost-static-shipped-cmxdemo"
+      end
+    end
+  
+end
