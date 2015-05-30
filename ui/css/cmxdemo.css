@@ -73,6 +73,16 @@
   border-radius: 5px;
 }
 
+.pointCaption {
+  display:block;
+  height:12px;
+  font-size: 10pt;
+  position:absolute;
+  text-decoration:none;
+  color: white;
+  background-color: black;
+}
+
 .userPoint {
   display:block; width:15px; height:15px;
   position:absolute;
@@ -94,6 +104,7 @@
   font-size: 10pt;
   position:absolute;
   color: white;
+  background-color: black;
 }
 
 table.t1 {

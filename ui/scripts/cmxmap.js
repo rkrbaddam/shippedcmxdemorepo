@@ -58,14 +58,17 @@ function showUserMap(mapNameArg, imageNameArg, userToShow, userHistory) {
         var user = userlist[i]
         var x = user.mapCoordinate.x * scale
         var y = user.mapCoordinate.y * scale
-        var newLink = $("<a />", {
-            href : "#",
-            text: user.userName,
-            class:"point",
-            onClick: "getUserHistory(" + i + ")"
-        });
-        newLink.css({top:y + 'px', left: x+ 'px'});
-        map.append(newLink);
+        map.append( $("<a />", {
+              href: "#",
+              class:"point",
+              onClick: "getUserHistory(" + i + ")"
+          }).css({top:y + 'px', left: x+ 'px'}))
+        map.append($("<a />", {
+              href: "#",
+              text: user.userName,
+              class:"pointCaption",
+              onClick: "getUserHistory(" + i + ")"
+          }).css({top:y + 'px', left: (x+18) + 'px'}))
     }
     $(".userPoint").remove()
     $(".userPointCaption").remove()
@@ -78,6 +81,7 @@ function getUserHistory(i)
   mapUpdateActive = true
   currUser = i
   $(".point").remove()
+  $(".pointCaption").remove()
   $(".userPoint").remove()
   $(".userPointCaption").remove()
   $("#content").html(userListButton + "&nbsp;&nbsp" + allUserMapButton)
@@ -144,6 +148,7 @@ function setResizeEventHandler(setEventHandler) {
     $(window).resize(function() {
       if (resizeEventHandlerSet && !mapUpdateActive) {
         $(".point").remove()
+        $(".pointCaption").remove()
         $(".userPoint").remove()
         $(".userPointCaption").remove()
         showUserMap(0, 0, currUser, currUserHistory)
