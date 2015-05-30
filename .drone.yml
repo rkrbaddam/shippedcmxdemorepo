@@ -1,0 +1,28 @@
+image:  bradrydzewski/node:0.10
+
+git:
+  path: github.com/CiscoCloud/shipped-cmxdemo
+
+script:
+  - echo Install Node packages
+  - bash bin/build
+  - bash bin/test
+
+publish:
+  docker:
+    dockerfile: ./Dockerfile
+    docker_host: 173.37.40.202:2375
+    docker_version: 1.4.1
+    registry_login: true
+    username: npateriyainsecure
+    password: githubpassword
+    email: npateriya@yahoo.com
+    image_name: npateriyainsecure/shipped-cmxdemo
+    push_latest: true
+    tag: $DRONE_COMMIT
+
+notify:
+  webhook:
+    urls:
+      - "http://shipped-api.shipped-cisco.com/webhooks/drone"
+    on_success: true
