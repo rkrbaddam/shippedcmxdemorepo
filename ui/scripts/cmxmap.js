@@ -11,15 +11,21 @@ var mapName
 var imageName
 var userListButton = "<button onClick='returnToUserList()'>Show List of All Users</button>"
 var allUserMapButton = "<button onClick='showUserMap()'>Show Map of All Users</button>"
+var currUser = null
+var currUserHistory = null
 var historyLengthToShow = 10
 var historyMinimumGapSeconds = 60
+var mapUpdateActive = false
+var resizeEventHandlerSet = false
 
 // showUserMap - show the map of users
 // Arguments:
 //   mapNameArg   - human-readable name of map for header
 //   imageNameArg - filename of image to show
 //   userToShow   - index of user for which history is desired; -1 to show all users
-function showUserMap(mapNameArg, imageNameArg, userToShow) {
+function showUserMap(mapNameArg, imageNameArg, userToShow, userHistory) {
+  mapUpdateActive = true
+  currUser = userToShow
   if (typeof mapNameArg == "string") {
     mapName = mapNameArg
   }
@@ -36,8 +42,13 @@ function showUserMap(mapNameArg, imageNameArg, userToShow) {
   var h = Math.round(userlist[0].mapInfo.floorDimension.length * scale)
   map.css({width: w + 'px', height:h+'px', backgroundImage:'url('+imgUrl+')', backgroundSize:w+'px '+ h+'px' });
   map.show()
+  setResizeEventHandler(true)
   if (typeof userToShow == "number" && userToShow >= 0) {
-    getUserHistory(userToShow)
+    if (typeof userHistory == "object") {
+      showUserHistory(userHistory)
+    } else {
+      getUserHistory(userToShow)
+    }
   } else {
     // Add links for individual users
     $("#heading").html("Map of All Users in Room " + mapName)
@@ -58,11 +69,14 @@ function showUserMap(mapNameArg, imageNameArg, userToShow) {
     }
     $(".userPoint").remove()
     $(".userPointCaption").remove()
+    mapUpdateActive = false
   }
 }
 
 function getUserHistory(i)
 {
+  mapUpdateActive = true
+  currUser = i
   $(".point").remove()
   $(".userPoint").remove()
   $(".userPointCaption").remove()
@@ -74,10 +88,12 @@ function getUserHistory(i)
       cmxUrl("/location/v1/history/clients/" + user.macAddress),
       showUserHistory,
       "json")
-   .fail(showRestError)
+   .fail(showMapRestError)
 }
 
 function showUserHistory(history) {
+  mapUpdateActive = true
+  currUserHistory = history
   var map = jQuery('#map');
   var timeOfLastPoint = 0
   var minGapMS = historyMinimumGapSeconds*1000
@@ -100,12 +116,38 @@ function showUserHistory(history) {
         }).css({top:y + 'px', left: (x+18) + 'px'}))
     }
   }
+  mapUpdateActive = false
 }
 
 function returnToUserList() {
   $("#map").hide()
   $("#content").hide()
   setError()
+  setResizeEventHandler(false)
   getUsers()
 }
 
+function showMapRestError(jqXHR, textStatus, errorThrown) {
+  setResizeEventHandler(false)
+  showRestError(jqXHR, textStatus, errorThrown)
+}
+
+// Handle resize events by redrawing the map
+function setResizeEventHandler(setEventHandler) {
+  if (resizeEventHandlerSet && !setEventHandler) {
+    resizeEventHandlerSet = false
+    $(window).off("resize")
+    mapUpdateActive = false
+  }
+  else if (setEventHandler && !resizeEventHandlerSet) {
+    resizeEventHandlerSet = true
+    $(window).resize(function() {
+      if (resizeEventHandlerSet && !mapUpdateActive) {
+        $(".point").remove()
+        $(".userPoint").remove()
+        $(".userPointCaption").remove()
+        showUserMap(0, 0, currUser, currUserHistory)
+      }
+    })
+  }
+}
