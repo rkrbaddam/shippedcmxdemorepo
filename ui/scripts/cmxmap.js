@@ -28,16 +28,14 @@ function showUserMap(mapNameArg, imageNameArg, userToShow) {
   }
   $("#content").show()
   var userlist = global.userlist
-  var $map = jQuery('#map');
+  var map = jQuery('#map');
   var imgUrl = cmxUrl("/config/v1/maps/imagesource/" + imageName)
-  var $w = userlist[0].mapInfo.floorDimension.width    // in feet width of image
-  var $h = userlist[0].mapInfo.floorDimension.length   // in feet height of image
   var imgWidth = $(window).width()
-  scale = imgWidth / $w;
-  $w = imgWidth
-  $h = $h * scale
-  $map.css({width: imgWidth + 'px', height:$h+'px', backgroundImage:'url('+imgUrl+')', backgroundSize:$w+'px '+$h+'px' });
-  $map.show()
+  scale = imgWidth / userlist[0].mapInfo.floorDimension.width;
+  var w = imgWidth
+  var h = Math.round(userlist[0].mapInfo.floorDimension.length * scale)
+  map.css({width: w + 'px', height:h+'px', backgroundImage:'url('+imgUrl+')', backgroundSize:w+'px '+ h+'px' });
+  map.show()
   if (typeof userToShow == "number" && userToShow >= 0) {
     getUserHistory(userToShow)
   } else {
@@ -56,7 +54,7 @@ function showUserMap(mapNameArg, imageNameArg, userToShow) {
             onClick: "getUserHistory(" + i + ")"
         });
         newLink.css({top:y + 'px', left: x+ 'px'});
-        $map.append(newLink);
+        map.append(newLink);
     }
     $(".userPoint").remove()
     $(".userPointCaption").remove()
@@ -80,7 +78,7 @@ function getUserHistory(i)
 }
 
 function showUserHistory(history) {
-  var $map = jQuery('#map');
+  var map = jQuery('#map');
   var timeOfLastPoint = 0
   var minGapMS = historyMinimumGapSeconds*1000
   var pointsShown = 0
@@ -90,13 +88,13 @@ function showUserHistory(history) {
       var x = history[i].mapCoordinate.x * scale
       var y = history[i].mapCoordinate.y * scale
       timestamp = new Date(timestamp*1000)
-      $map.append( $("<a />", {
+      map.append( $("<a />", {
             href: "#",
             title: timestamp,
             text: ++pointsShown, 
             class:"userPoint"
         }).css({top:y + 'px', left: x+ 'px'}))
-      $map.append($("<span />", {
+      map.append($("<span />", {
             text: timestamp.toLocaleTimeString(),
             class:"userPointCaption"
         }).css({top:y + 'px', left: (x+18) + 'px'}))
