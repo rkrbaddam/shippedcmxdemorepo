@@ -90,6 +90,7 @@ function doLogout() {
   $("#map").hide()
   $("#map").empty()
   $("#map").css({backgroundImage:"none"})
+  setResizeEventHandler(false)
 }
 
 // setVirtualize - respond to setting of the virtualize checkbox
