@@ -72,7 +72,7 @@
 "slot": 0
 }
 },
-"userName": "david"
+"userName": "David"
 },
 {
 "apMacAddress": "00:2b:01:00:05:00",
@@ -147,7 +147,7 @@
 "slot": 0
 }
 },
-"userName": "neelesh"
+"userName": "Neelesh"
 },
 {
 "apMacAddress": "00:2b:01:00:07:00",
@@ -222,7 +222,7 @@
 "slot": 0
 }
 },
-"userName": "vijay"
+"userName": "Vijay"
 },
 {
 "apMacAddress": "00:2b:01:00:07:00",
@@ -297,7 +297,7 @@
 "slot": 0
 }
 },
-"userName": "keith"
+"userName": "Keith"
 },
 {
 "apMacAddress": "00:2b:01:00:08:00",
@@ -372,7 +372,7 @@
 "slot": 0
 }
 },
-"userName": "mike"
+"userName": "Mike"
 },
 {
 "apMacAddress": "00:2b:01:00:08:00",
@@ -447,7 +447,7 @@
 "slot": 0
 }
 },
-"userName": "joe"
+"userName": "Joe"
 },
 {
 "apMacAddress": "00:2b:01:00:08:00",
@@ -522,7 +522,7 @@
 "slot": 0
 }
 },
-"userName": "brendan"
+"userName": "Brendan"
 },
 {
 "apMacAddress": "00:2b:01:00:08:00",
@@ -597,7 +597,7 @@
 "slot": 0
 }
 },
-"userName": "ben"
+"userName": "Ben"
 },
 {
 "apMacAddress": "00:2b:01:00:08:00",
@@ -672,6 +672,6 @@
 "slot": 0
 }
 },
-"userName": "steve"
+"userName": "Steve"
 }
 ]
