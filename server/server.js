@@ -9,7 +9,6 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 var express     = require("express");
 var bodyParser  = require("body-parser")
-var exec        = require("child_process").exec
 var request     = require("request")
 var serveStatic = require("serve-static")
 var compression = require("compression")
