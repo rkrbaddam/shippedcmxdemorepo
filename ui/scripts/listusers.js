@@ -16,6 +16,12 @@ function getUsers() {
 }
 
 function listUsers(userlist) {
+  for (var i = 0; i < userlist.length; i++) {
+    var user = userlist[i]
+    if (user.userName == "cisco123") {
+      user.userName = user.macAddress
+    }
+  }
   global.userlist = userlist
 
   // If we've never seen a map, display the map for the first user's room

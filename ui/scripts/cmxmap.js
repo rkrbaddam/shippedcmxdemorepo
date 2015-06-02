@@ -87,7 +87,11 @@ function getUserHistory(i)
   $("#content").html(userListButton + "&nbsp;&nbsp" + allUserMapButton)
   $("#content").append("<br><br><span class='mapCaption'>Points are numbered from the most recent; hover over a point to see its exact time</span>")
   var user = global.userlist[i]
-  $("#heading").html("Location History of User " + user.userName + " at MAC Address " + user.macAddress)
+  if (user.userName == user.macAddress) {
+    $("#heading").html("Location History of user at MAC Address " + user.macAddress)
+  } else {
+    $("#heading").html("Location History of User " + user.userName + " at MAC Address " + user.macAddress)
+  }
   $.get(
       cmxUrl("/location/v1/history/clients/" + user.macAddress),
       showUserHistory,
